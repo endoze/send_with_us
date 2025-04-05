@@ -1,5 +1,10 @@
 # SendWithUs Rust Client
 
+![Build Status](https://github.com/endoze/send_with_us/actions/workflows/ci.yml/badge.svg?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/endoze/send_with_us/badge.svg?branch=master)](https://coveralls.io/github/endoze/send_with_us?branch=master)
+[![Crate](https://img.shields.io/crates/v/send_with_us.svg)](https://crates.io/crates/send_with_us)
+[![Docs](https://docs.rs/send_with_us/badge.svg)](https://docs.rs/send_with_us)
+
 An async Rust client for the [SendWithUs](https://www.sendwithus.com) API.
 
 ## Features
