@@ -1,0 +1,13 @@
+[test_config]
+skip-clean = true
+exclude-files = ["target/**/*"]
+target-dir = "coverage"
+out = ["Lcov"]
+output-dir = "coverage"
+# Exclude specific lines with match patterns that cause coverage issues
+exclude-lines = [
+  "StatusCode::OK | StatusCode::CREATED | StatusCode::ACCEPTED", # OR pattern in match arm
+  "StatusCode::OK =>", # Individual status code patterns from refactored code
+  "StatusCode::CREATED =>",
+  "StatusCode::ACCEPTED =>"
+]

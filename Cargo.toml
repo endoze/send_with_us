@@ -1,0 +1,56 @@
+[package]
+name = "send_with_us"
+version = "0.1.0"
+edition = "2024"
+authors = ["Sendwithus Contributors"]
+description = "Async Rust client for the SendWithUs transactional email API"
+license = "MIT"
+repository = "https://github.com/endoze/send_with_us"
+
+[lib]
+name = "send_with_us"
+path = "src/lib.rs"
+
+[dependencies]
+reqwest = { version = "0.12", features = ["json", "multipart"] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+thiserror = "2.0"
+base64 = "0.22"
+url = "2.5"
+async-trait = "0.1"
+tokio = { version = "1.36", features = ["rt", "fs"] }
+tracing = { version = "0.1", optional = true }
+
+[features]
+default = []
+logging = ["tracing"]
+
+[dev-dependencies]
+tokio = { version = "1.36", features = ["full", "macros"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json"] }
+dotenv = "0.15"
+tempdir = "0.3"
+mockito = "1.7.0"
+
+[lints.rust]
+unexpected_cfgs = { level = "warn", check-cfg = ['cfg(tarpaulin_include)'] }
+
+# The profile that 'cargo dist' will build with
+[profile.dist]
+inherits = "release"
+lto = "thin"
+
+# Config for 'cargo dist'
+[workspace.metadata.dist]
+# The preferred cargo-dist version to use in CI (Cargo.toml SemVer syntax)
+cargo-dist-version = "0.4.2"
+# CI backends to support
+ci = ["github"]
+# The installers to generate for each app
+installers = ["shell", "powershell"]
+# Target platforms to build apps for (Rust target-triple syntax)
+targets = ["x86_64-unknown-linux-gnu", "aarch64-apple-darwin", "x86_64-apple-darwin", "x86_64-unknown-linux-musl", "x86_64-pc-windows-msvc"]
+# Publish jobs to run in CI
+pr-run-mode = "plan"
