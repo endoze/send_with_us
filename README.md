@@ -1,5 +1,10 @@
 # SendWithUs Rust Client
 
+![Build Status](https://github.com/endoze/send_with_us/actions/workflows/ci.yml/badge.svg?branch=master)
+[![Coverage Status](https://coveralls.io/repos/github/endoze/send_with_us/badge.svg?branch=master)](https://coveralls.io/github/endoze/send_with_us?branch=master)
+[![Crate](https://img.shields.io/crates/v/send_with_us.svg)](https://crates.io/crates/send_with_us)
+[![Docs](https://docs.rs/send_with_us/badge.svg)](https://docs.rs/send_with_us)
+
 An async Rust client for the [SendWithUs](https://www.sendwithus.com) API.
 
 ## Features
@@ -27,7 +32,7 @@ send_with_us = { version = "0.1.0", features = ["logging"] }
 
 ### Basic Example
 
-```rust
+```rust , ignore
 use send_with_us::{Api, Config};
 use send_with_us::types::{EmailOptions, Recipient};
 use std::collections::HashMap;
@@ -57,7 +62,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### With Email Attachments
 
-```rust
+```rust , ignore
 use send_with_us::{Api, Attachment};
 use send_with_us::types::{EmailOptions, Recipient};
 
@@ -79,7 +84,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### Custom Configuration
 
-```rust
+```rust , ignore
 use send_with_us::{Api, Config};
 
 #[tokio::main]
@@ -96,6 +101,50 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
   
   Ok(())
 }
+```
+
+
+### Working with Templates
+
+```rust , ignore
+# use send_with_us::{Api, ApiClient, types::{TemplateOptions}};
+# use serde_json::Value;
+# #[tokio::main]
+# async fn main() -> Result<(), Box<dyn std::error::Error>> {
+let api = Api::with_api_key("YOUR_API_KEY");
+
+let template = TemplateOptions {
+  name: "Welcome Email".to_string(),
+  subject: "Welcome to Our Service".to_string(),
+  html: "<html><body>Welcome, {{name}}!</body></html>".to_string(),
+  text: "Welcome, {{name}}!".to_string(),
+  preheader: Some("Welcome to our service".to_string()),
+  amp_html: None,
+};
+
+let result = api.create_template(template).await?;
+# Ok(())
+# }
+```
+
+### Error Handling
+
+```rust , ignore
+# use send_with_us::{Api, ApiClient, Error, types::{EmailOptions, Recipient}};
+# #[tokio::main]
+# async fn main() {
+let api = Api::with_api_key("YOUR_API_KEY");
+let recipient = Recipient::new("test@example.com");
+let options = EmailOptions::new("", recipient); // Empty template ID
+
+match api.send_email(options).await {
+  Ok(response) => println!("Email sent: {:?}", response),
+  Err(Error::MissingTemplateId) => eprintln!("Error: Template ID is required"),
+  Err(Error::InvalidCredentials) => eprintln!("Error: Invalid API key"),
+  Err(Error::ConnectionFailed) => eprintln!("Error: Could not connect to SendWithUs API"),
+  Err(err) => eprintln!("Error: {}", err),
+}
+# }
 ```
 
 ## API Documentation
