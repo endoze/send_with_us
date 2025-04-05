@@ -2,7 +2,7 @@
 name = "send_with_us"
 version = "0.1.0"
 edition = "2024"
-authors = ["Sendwithus Contributors"]
+authors = ["Endoze <endoze@endozemedia.com>"]
 description = "Async Rust client for the SendWithUs transactional email API"
 license = "MIT"
 repository = "https://github.com/endoze/send_with_us"
