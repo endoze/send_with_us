@@ -107,44 +107,47 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 ### Working with Templates
 
 ```rust , ignore
-# use send_with_us::{Api, ApiClient, types::{TemplateOptions}};
-# use serde_json::Value;
-# #[tokio::main]
-# async fn main() -> Result<(), Box<dyn std::error::Error>> {
-let api = Api::with_api_key("YOUR_API_KEY");
+use send_with_us::{Api, ApiClient, types::{TemplateOptions}};
+use serde_json::Value;
 
-let template = TemplateOptions {
-  name: "Welcome Email".to_string(),
-  subject: "Welcome to Our Service".to_string(),
-  html: "<html><body>Welcome, {{name}}!</body></html>".to_string(),
-  text: "Welcome, {{name}}!".to_string(),
-  preheader: Some("Welcome to our service".to_string()),
-  amp_html: None,
-};
+#[tokio::main]
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
+  let api = Api::with_api_key("YOUR_API_KEY");
+  
+  let template = TemplateOptions {
+    name: "Welcome Email".to_string(),
+    subject: "Welcome to Our Service".to_string(),
+    html: "<html><body>Welcome, {{name}}!</body></html>".to_string(),
+    text: "Welcome, {{name}}!".to_string(),
+    preheader: Some("Welcome to our service".to_string()),
+    amp_html: None,
+  };
 
-let result = api.create_template(template).await?;
-# Ok(())
-# }
+  let result = api.create_template(template).await?;
+
+  Ok(())
+}
 ```
 
 ### Error Handling
 
 ```rust , ignore
-# use send_with_us::{Api, ApiClient, Error, types::{EmailOptions, Recipient}};
-# #[tokio::main]
-# async fn main() {
-let api = Api::with_api_key("YOUR_API_KEY");
-let recipient = Recipient::new("test@example.com");
-let options = EmailOptions::new("", recipient); // Empty template ID
+use send_with_us::{Api, ApiClient, Error, types::{EmailOptions, Recipient}};
+#[tokio::main]
 
-match api.send_email(options).await {
-  Ok(response) => println!("Email sent: {:?}", response),
-  Err(Error::MissingTemplateId) => eprintln!("Error: Template ID is required"),
-  Err(Error::InvalidCredentials) => eprintln!("Error: Invalid API key"),
-  Err(Error::ConnectionFailed) => eprintln!("Error: Could not connect to SendWithUs API"),
-  Err(err) => eprintln!("Error: {}", err),
+async fn main() {
+  let api = Api::with_api_key("YOUR_API_KEY");
+  let recipient = Recipient::new("test@example.com");
+  let options = EmailOptions::new("", recipient); // Empty template ID
+
+  match api.send_email(options).await {
+    Ok(response) => println!("Email sent: {:?}", response),
+    Err(Error::MissingTemplateId) => eprintln!("Error: Template ID is required"),
+    Err(Error::InvalidCredentials) => eprintln!("Error: Invalid API key"),
+    Err(Error::ConnectionFailed) => eprintln!("Error: Could not connect to SendWithUs API"),
+    Err(err) => eprintln!("Error: {}", err),
+  }
 }
-# }
 ```
 
 ## API Documentation
