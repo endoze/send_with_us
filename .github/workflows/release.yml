@@ -76,10 +76,12 @@ jobs:
       # but also really annoying to build CI around when it needs secrets to work right.)
       - id: plan
         run: |
-          dist host --allow-dirty --steps=create ${{ format('--tag=send_with_us-{0}', github.ref_name) }} --output-format=json > plan-dist-manifest.json
-          echo "dist ran successfully"
-          cat plan-dist-manifest.json
-          echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
+          if [ -n "${{ !github.event.pull_request && github.ref_name || '' }}" ]; then
+            dist host --allow-dirty --steps=create ${{ format('--tag=send_with_us-{0}', github.ref_name) }} --output-format=json > plan-dist-manifest.json
+            echo "dist ran successfully"
+            cat plan-dist-manifest.json
+            echo "manifest=$(jq -c "." plan-dist-manifest.json)" >> "$GITHUB_OUTPUT"
+          fi
       - name: "Upload dist-manifest.json"
         uses: actions/upload-artifact@v4
         with:
