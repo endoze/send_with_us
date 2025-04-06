@@ -32,8 +32,8 @@ send_with_us = { version = "0.1.0", features = ["logging"] }
 
 ### Basic Example
 
-```rust , ignore
-use send_with_us::{Api, Config};
+```rust , no_run
+use send_with_us::{Api, Config, ApiClient};
 use send_with_us::types::{EmailOptions, Recipient};
 use std::collections::HashMap;
 use serde_json::json;
@@ -62,8 +62,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### With Email Attachments
 
-```rust , ignore
-use send_with_us::{Api, Attachment};
+```rust , no_run
+use send_with_us::{Api, Attachment, ApiClient};
 use send_with_us::types::{EmailOptions, Recipient};
 
 #[tokio::main]
@@ -84,8 +84,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### Custom Configuration
 
-```rust , ignore
-use send_with_us::{Api, Config};
+```rust , no_run
+use send_with_us::{Api, Config, ApiClient};
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -106,7 +106,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### Working with Templates
 
-```rust , ignore
+```rust , no_run
 use send_with_us::{Api, ApiClient, types::{TemplateOptions}};
 use serde_json::Value;
 
@@ -131,7 +131,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
 ### Error Handling
 
-```rust , ignore
+```rust , no_run
 use send_with_us::{Api, ApiClient, Error, types::{EmailOptions, Recipient}};
 #[tokio::main]
 
