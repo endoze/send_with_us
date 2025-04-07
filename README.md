@@ -1,6 +1,6 @@
 # SendWithUs Rust Client
 
-![Build Status](https://github.com/endoze/send_with_us/actions/workflows/ci.yml/badge.svg?branch=master)
+[![Build Status](https://github.com/endoze/send_with_us/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/endoze/send_with_us/actions?query=branch%3Amaster)
 [![Coverage Status](https://coveralls.io/repos/github/endoze/send_with_us/badge.svg?branch=master)](https://coveralls.io/github/endoze/send_with_us?branch=master)
 [![Crate](https://img.shields.io/crates/v/send_with_us.svg)](https://crates.io/crates/send_with_us)
 [![Docs](https://docs.rs/send_with_us/badge.svg)](https://docs.rs/send_with_us)
