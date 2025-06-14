@@ -7,7 +7,7 @@ description = "Async Rust client for the SendWithUs transactional email API"
 license = "MIT"
 repository = "https://github.com/endoze/send_with_us"
 keywords = ["email", "transactional", "sendwithus", "api", "client"]
-categories = ["api-bindings", "email", "mail"]
+categories = ["api-bindings", "email", "asynchronous"]
 
 [lib]
 name = "send_with_us"
