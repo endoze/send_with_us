@@ -4,7 +4,7 @@ use serde_json::json;
 use std::collections::HashMap;
 use std::env;
 
-use dotenv::dotenv;
+use dotenvy::dotenv;
 use tracing_subscriber::{EnvFilter, FmtSubscriber};
 
 #[tokio::main]

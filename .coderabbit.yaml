@@ -1,0 +1,81 @@
+# yaml-language-server: $schema=https://coderabbit.ai/integrations/schema.v2.json
+language: en-US
+early_access: false
+enable_free_tier: true
+
+reviews:
+  profile: assertive
+  request_changes_workflow: false
+  high_level_summary: true
+  collapse_walkthrough: true
+  sequence_diagrams: false
+  poem: false
+  in_progress_fortune: false
+  suggested_labels: false
+  suggested_reviewers: false
+  path_filters:
+    - "!Cargo.lock"
+    - "!target/**"
+    - "!coverage/**"
+    - "!CHANGELOG.md"
+  path_instructions:
+    - path: "src/**/*.rs"
+      instructions: |
+        Public items need rustdoc covering the contract: purpose, invariants,
+        errors, panics, and an example where it helps. Inline `//` comments are
+        only warranted for a why the code cannot state (a workaround and its
+        reason, a drop-order dependency, a deliberate fail-closed choice).
+        Flag inline comments that restate what the code does or describe a
+        dependency's internals.
+
+        Published async client library for the SendWithUs email API (reqwest).
+        lib.rs re-exports, the `ApiClient` trait, `Error` variants, and public
+        fields on `Config` and `types` structs are semver-stable: flag breaks.
+        The API key (`X-SWU-API-KEY` header) must never reach logs, debug
+        output, or error messages. Map HTTP statuses to typed `Error`
+        variants; no `unwrap`/`expect` on network or user input. Serde field
+        names must match the SendWithUs JSON API. rustfmt: `tab_spaces = 2`.
+
+        Do not comment on style that `cargo fmt` or
+        `cargo clippy --all-targets --all-features -- -D warnings` already
+        enforces.
+    - path: "tests/**/*.rs"
+      instructions: |
+        Check that tests assert behavior rather than restating the
+        implementation, and that new public API or bugfixes come with
+        coverage.
+    - path: ".github/workflows/**"
+      instructions: |
+        Every third-party action must be pinned to a full commit SHA with the
+        version in a trailing comment (`uses: owner/action@<sha> # vX.Y.Z`).
+        release.yml is hand-maintained: dist can't generate a release workflow for
+        a library crate, so don't suggest regenerating it. dist alone creates GitHub Releases (release-plz.toml keeps `git_release_enable = false`).
+  auto_review:
+    enabled: true
+    drafts: false
+    auto_incremental_review: true
+    # Stacked PRs target the branch below them, not just master.
+    base_branches:
+      - ".*"
+  tools:
+    clippy:
+      enabled: true
+    actionlint:
+      enabled: true
+    yamllint:
+      enabled: true
+    gitleaks:
+      enabled: true
+    markdownlint:
+      enabled: true
+
+chat:
+  art: false
+  auto_reply: true
+  allow_non_org_members: false
+
+knowledge_base:
+  learnings:
+    scope: local
+  issues:
+    scope: local

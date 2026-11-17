@@ -1,3 +1,4 @@
+use std::fmt;
 use url::Url;
 
 /// Current crate version, automatically set from Cargo.toml
@@ -24,7 +25,8 @@ pub const VERSION: &str = env!("CARGO_PKG_VERSION");
 ///   .with_api_version("2")
 ///   .with_debug(true);
 /// ```
-#[derive(Debug, Clone)]
+#[derive(Clone)]
+#[non_exhaustive]
 pub struct Config {
   /// Base URL for the SendWithUs API
   pub url: Url,
@@ -150,6 +152,13 @@ impl Config {
     self
   }
 
+  /// Sets the client identifier sent in the `X-SWU-API-CLIENT` header
+  /// (default: `rust-{VERSION}`).
+  pub fn with_client_stub(mut self, client_stub: impl Into<String>) -> Self {
+    self.client_stub = client_stub.into();
+    self
+  }
+
   /// Gets the protocol (http or https) from the configured URL.
   ///
   /// # Returns
@@ -181,9 +190,34 @@ impl Config {
   }
 }
 
+/// Formats every field except `api_key`, which is shown as `[redacted]` so
+/// the key never ends up in logs or panic messages.
+impl fmt::Debug for Config {
+  fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
+    f.debug_struct("Config")
+      .field("url", &self.url)
+      .field("api_key", &format_args!("[redacted]"))
+      .field("api_version", &self.api_version)
+      .field("debug", &self.debug)
+      .field("client_stub", &self.client_stub)
+      .finish()
+  }
+}
+
 #[cfg(test)]
 mod tests {
   use super::*;
+
+  #[test]
+  fn test_debug_redacts_api_key() {
+    let config = Config::new("swu_secret_key_123").with_debug(true);
+
+    for output in [format!("{config:?}"), format!("{config:#?}")] {
+      assert!(!output.contains("swu_secret_key_123"), "{output}");
+      assert!(output.contains("[redacted]"), "{output}");
+      assert!(output.contains("api.sendwithus.com"), "{output}");
+    }
+  }
 
   #[test]
   fn test_default_config() {
@@ -223,6 +257,12 @@ mod tests {
   fn test_with_debug_mode() {
     let config = Config::new("test-api-key").with_debug(true);
     assert!(config.debug);
+  }
+
+  #[test]
+  fn test_with_client_stub() {
+    let config = Config::new("test-api-key").with_client_stub("my-app-1.0");
+    assert_eq!(config.client_stub, "my-app-1.0");
   }
 
   #[test]

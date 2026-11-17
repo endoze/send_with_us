@@ -23,9 +23,9 @@ Add this to your `Cargo.toml`:
 
 ```toml
 [dependencies]
-send_with_us = "0.1.0"
+send_with_us = "0.2"
 # With optional logging feature enabled
-send_with_us = { version = "0.1.0", features = ["logging"] }
+send_with_us = { version = "0.2", features = ["logging"] }
 ```
 
 ## Usage
@@ -114,14 +114,13 @@ use serde_json::Value;
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
   let api = Api::with_api_key("YOUR_API_KEY");
   
-  let template = TemplateOptions {
-    name: "Welcome Email".to_string(),
-    subject: "Welcome to Our Service".to_string(),
-    html: "<html><body>Welcome, {{name}}!</body></html>".to_string(),
-    text: "Welcome, {{name}}!".to_string(),
-    preheader: Some("Welcome to our service".to_string()),
-    amp_html: None,
-  };
+  let template = TemplateOptions::new(
+    "Welcome Email",
+    "Welcome to Our Service",
+    "<html><body>Welcome, {{name}}!</body></html>",
+    "Welcome, {{name}}!",
+  )
+  .with_preheader("Welcome to our service");
 
   let result = api.create_template(template).await?;
 
@@ -171,7 +170,7 @@ This library provides optional logging integration via the `tracing` crate. To e
 
 ```toml
 [dependencies]
-send_with_us = { version = "0.1.0", features = ["logging"] }
+send_with_us = { version = "0.2", features = ["logging"] }
 ```
 
 When the `logging` feature is enabled, the library will log API operations, request details, and responses at appropriate trace levels. This can be helpful for debugging and monitoring API usage.
