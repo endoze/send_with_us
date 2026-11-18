@@ -9,6 +9,18 @@ license = "MIT"
 repository = "https://github.com/endoze/send_with_us"
 keywords = ["email", "transactional", "sendwithus", "api", "client"]
 categories = ["api-bindings", "email", "asynchronous"]
+# Repo tooling isn't part of the crate; keeping it out means CI-only changes
+# don't count as package changes and trigger a release.
+exclude = [
+  ".github/",
+  ".coderabbit.yaml",
+  ".gitignore",
+  "deny.toml",
+  "dist-workspace.toml",
+  "release-plz.toml",
+  "rustfmt.toml",
+  "tarpaulin.toml",
+]
 
 [lib]
 name = "send_with_us"
