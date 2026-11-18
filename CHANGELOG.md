@@ -2,6 +2,16 @@
 
 All notable changes to this project will be documented in this file.
 
+## [0.2.0](https://github.com/endoze/send_with_us/compare/v0.1.3...v0.2.0) - 2026-11-18
+
+### Added
+
+- [**breaking**] maintenance pass for dependencies, CI, and release tooling
+
+### Other
+
+- move actions off deprecated Node runtimes, pin to SHAs
+
 ## [0.1.3] - 2026-07-20
 
 ### Build
