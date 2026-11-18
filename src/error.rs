@@ -9,6 +9,7 @@ pub type Result<T> = std::result::Result<T, Error>;
 /// with the SendWithUs email service. Each variant provides specific information
 /// about what went wrong to help with debugging and error handling.
 #[derive(Error, Debug)]
+#[non_exhaustive]
 pub enum Error {
   /// The API key provided is missing, invalid, or unauthorized
   ///

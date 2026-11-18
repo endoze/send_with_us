@@ -18,6 +18,7 @@ use std::collections::HashMap;
 ///   .with_name("John Doe");
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[non_exhaustive]
 pub struct Recipient {
   /// Recipient's email address
   pub address: String,
@@ -103,6 +104,7 @@ impl Recipient {
 ///   .with_reply_to("support@company.com");
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[non_exhaustive]
 pub struct Sender {
   /// Sender's email address
   pub address: String,
@@ -227,6 +229,7 @@ impl Sender {
 ///   .with_tags(vec!["welcome".to_string(), "new-user".to_string()]);
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[non_exhaustive]
 pub struct EmailOptions {
   /// Email template ID
   pub email_id: String,
@@ -562,16 +565,16 @@ impl EmailOptions {
 /// ```
 /// use send_with_us::types::TemplateOptions;
 ///
-/// let template = TemplateOptions {
-///   name: "Welcome Email".to_string(),
-///   subject: "Welcome to Our Service".to_string(),
-///   html: "<html><body>Welcome, {{name}}!</body></html>".to_string(),
-///   text: "Welcome, {{name}}!".to_string(),
-///   preheader: Some("Welcome to our service".to_string()),
-///   amp_html: None,
-/// };
+/// let template = TemplateOptions::new(
+///   "Welcome Email",
+///   "Welcome to Our Service",
+///   "<html><body>Welcome, {{name}}!</body></html>",
+///   "Welcome, {{name}}!",
+/// )
+/// .with_preheader("Welcome to our service");
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[non_exhaustive]
 pub struct TemplateOptions {
   /// Template name (displayed in the SendWithUs dashboard)
   pub name: String,
@@ -594,6 +597,38 @@ pub struct TemplateOptions {
   pub amp_html: Option<String>,
 }
 
+impl TemplateOptions {
+  /// Creates template options with the required content and no preheader
+  /// or AMP HTML.
+  pub fn new(
+    name: impl Into<String>,
+    subject: impl Into<String>,
+    html: impl Into<String>,
+    text: impl Into<String>,
+  ) -> Self {
+    Self {
+      name: name.into(),
+      subject: subject.into(),
+      html: html.into(),
+      text: text.into(),
+      preheader: None,
+      amp_html: None,
+    }
+  }
+
+  /// Sets the preheader (preview text shown in email clients).
+  pub fn with_preheader(mut self, preheader: impl Into<String>) -> Self {
+    self.preheader = Some(preheader.into());
+    self
+  }
+
+  /// Sets the AMP HTML content.
+  pub fn with_amp_html(mut self, amp_html: impl Into<String>) -> Self {
+    self.amp_html = Some(amp_html.into());
+    self
+  }
+}
+
 /// Options for adding recipients to a drip campaign.
 ///
 /// Drip campaigns are sequences of automated emails sent over time.
@@ -607,24 +642,18 @@ pub struct TemplateOptions {
 /// use std::collections::HashMap;
 /// use serde_json::json;
 ///
-/// let options = DripCampaignOptions {
-///   recipient_address: "customer@example.com".to_string(),
-///   email_data: None,
-///   tags: None,
-///   locale: None,
-/// };
+/// let options = DripCampaignOptions::new("customer@example.com");
 ///
 /// let mut email_data = HashMap::new();
 /// email_data.insert("name".to_string(), json!("John"));
 ///
-/// let options = DripCampaignOptions {
-///   recipient_address: "customer@example.com".to_string(),
-///   email_data: Some(email_data),
-///   tags: Some(vec!["new-user".to_string()]),
-///   locale: Some("en-US".to_string()),
-/// };
+/// let options = DripCampaignOptions::new("customer@example.com")
+///   .with_email_data(email_data)
+///   .with_tags(vec!["new-user".to_string()])
+///   .with_locale("en-US");
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[non_exhaustive]
 pub struct DripCampaignOptions {
   /// Email address of the recipient to add to the campaign
   pub recipient_address: String,
@@ -642,6 +671,37 @@ pub struct DripCampaignOptions {
   pub locale: Option<String>,
 }
 
+impl DripCampaignOptions {
+  /// Creates drip campaign options for `recipient_address` with no email
+  /// data, tags, or locale.
+  pub fn new(recipient_address: impl Into<String>) -> Self {
+    Self {
+      recipient_address: recipient_address.into(),
+      email_data: None,
+      tags: None,
+      locale: None,
+    }
+  }
+
+  /// Sets the dynamic data for email template variables.
+  pub fn with_email_data(mut self, email_data: HashMap<String, serde_json::Value>) -> Self {
+    self.email_data = Some(email_data);
+    self
+  }
+
+  /// Sets tags for categorization and tracking.
+  pub fn with_tags(mut self, tags: Vec<String>) -> Self {
+    self.tags = Some(tags);
+    self
+  }
+
+  /// Sets the locale (e.g. "en-US").
+  pub fn with_locale(mut self, locale: impl Into<String>) -> Self {
+    self.locale = Some(locale.into());
+    self
+  }
+}
+
 /// Options for creating or managing customers in SendWithUs.
 ///
 /// The CustomerOptions struct is used when creating or updating customer
@@ -655,24 +715,19 @@ pub struct DripCampaignOptions {
 /// use std::collections::HashMap;
 /// use serde_json::json;
 ///
-/// let customer = CustomerOptions {
-///   email: "customer@example.com".to_string(),
-///   data: None,
-///   locale: None,
-/// };
+/// let customer = CustomerOptions::new("customer@example.com");
 ///
 /// let mut data = HashMap::new();
 /// data.insert("first_name".to_string(), json!("John"));
 /// data.insert("last_name".to_string(), json!("Doe"));
 /// data.insert("plan".to_string(), json!("premium"));
 ///
-/// let customer = CustomerOptions {
-///   email: "customer@example.com".to_string(),
-///   data: Some(data),
-///   locale: Some("en-US".to_string()),
-/// };
+/// let customer = CustomerOptions::new("customer@example.com")
+///   .with_data(data)
+///   .with_locale("en-US");
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[non_exhaustive]
 pub struct CustomerOptions {
   /// Customer's email address (primary identifier)
   pub email: String,
@@ -684,6 +739,29 @@ pub struct CustomerOptions {
   /// Locale for internationalization
   #[serde(skip_serializing_if = "Option::is_none")]
   pub locale: Option<String>,
+}
+
+impl CustomerOptions {
+  /// Creates customer options for `email` with no data or locale.
+  pub fn new(email: impl Into<String>) -> Self {
+    Self {
+      email: email.into(),
+      data: None,
+      locale: None,
+    }
+  }
+
+  /// Sets custom data stored on the customer.
+  pub fn with_data(mut self, data: HashMap<String, serde_json::Value>) -> Self {
+    self.data = Some(data);
+    self
+  }
+
+  /// Sets the locale (e.g. "en-US").
+  pub fn with_locale(mut self, locale: impl Into<String>) -> Self {
+    self.locale = Some(locale.into());
+    self
+  }
 }
 
 /// Options for rendering an email template without sending it.
@@ -704,15 +782,13 @@ pub struct CustomerOptions {
 /// template_data.insert("name".to_string(), json!("John"));
 /// template_data.insert("order_id".to_string(), json!("12345"));
 ///
-/// let options = RenderOptions {
-///   template: "template-id".to_string(),
-///   version_id: Some("version-id".to_string()),
-///   template_data,
-///   strict: true,
-///   locale: Some("en-US".to_string()),
-/// };
+/// let options = RenderOptions::new("template-id", template_data)
+///   .with_version_id("version-id")
+///   .with_strict(true)
+///   .with_locale("en-US");
 /// ```
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
+#[non_exhaustive]
 pub struct RenderOptions {
   /// ID of the template to render
   pub template: String,
@@ -731,6 +807,41 @@ pub struct RenderOptions {
   /// Locale for template internationalization
   #[serde(skip_serializing_if = "Option::is_none")]
   pub locale: Option<String>,
+}
+
+impl RenderOptions {
+  /// Creates render options for `template` with `template_data`, strict
+  /// mode off, and no version or locale.
+  pub fn new(
+    template: impl Into<String>,
+    template_data: HashMap<String, serde_json::Value>,
+  ) -> Self {
+    Self {
+      template: template.into(),
+      version_id: None,
+      template_data,
+      strict: false,
+      locale: None,
+    }
+  }
+
+  /// Renders a specific template version instead of the active one.
+  pub fn with_version_id(mut self, version_id: impl Into<String>) -> Self {
+    self.version_id = Some(version_id.into());
+    self
+  }
+
+  /// Sets strict mode: when true, missing template variables are an error.
+  pub fn with_strict(mut self, strict: bool) -> Self {
+    self.strict = strict;
+    self
+  }
+
+  /// Sets the locale (e.g. "en-US").
+  pub fn with_locale(mut self, locale: impl Into<String>) -> Self {
+    self.locale = Some(locale.into());
+    self
+  }
 }
 
 #[cfg(test)]

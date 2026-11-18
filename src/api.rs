@@ -1,7 +1,9 @@
 use async_trait::async_trait;
+use reqwest::header::{AUTHORIZATION, PROXY_AUTHORIZATION};
 use reqwest::{Client, StatusCode};
 use serde::{Serialize, de::DeserializeOwned};
 use serde_json::Value;
+use std::io::Write;
 
 use crate::config::Config;
 use crate::error::{Error, Result};
@@ -323,6 +325,42 @@ impl Api {
     Ok(base.to_string())
   }
 
+  /// Builds an authenticated request for `endpoint`, with the API key
+  /// header marked sensitive so `Debug` output of the request hides it.
+  ///
+  /// # Errors
+  /// Returns an error if the URL is invalid or a header value or the
+  /// payload cannot be encoded.
+  fn build_request<T>(
+    &self,
+    method: reqwest::Method,
+    endpoint: &str,
+    payload: Option<&T>,
+  ) -> Result<reqwest::Request>
+  where
+    T: Serialize + ?Sized,
+  {
+    let url = self.build_url(endpoint)?;
+
+    let mut builder = self
+      .client
+      .request(method, &url)
+      .header("Content-Type", "application/json")
+      .header(API_KEY_HEADER, &self.config.api_key)
+      .header("X-SWU-API-CLIENT", &self.config.client_stub);
+
+    if let Some(data) = payload {
+      builder = builder.json(data);
+    }
+
+    let mut request = builder.build()?;
+    if let Some(value) = request.headers_mut().get_mut(API_KEY_HEADER) {
+      value.set_sensitive(true);
+    }
+
+    Ok(request)
+  }
+
   /// Makes an API request to the SendWithUs API.
   ///
   /// # Arguments
@@ -349,24 +387,14 @@ impl Api {
     T: Serialize + ?Sized,
     R: DeserializeOwned,
   {
-    let url = self.build_url(endpoint)?;
-
-    let mut request = self
-      .client
-      .request(method, &url)
-      .header("Content-Type", "application/json")
-      .header("X-SWU-API-KEY", &self.config.api_key)
-      .header("X-SWU-API-CLIENT", &self.config.client_stub);
-
-    if let Some(data) = payload {
-      request = request.json(data);
-    }
+    let request = self.build_request(method, endpoint, payload)?;
 
     if self.config.debug {
-      eprintln!("SendWithUs Request: {:?}", request);
+      // Debug output is best effort; a closed stderr must not fail the request.
+      let _ = write_request_summary(&mut std::io::stderr().lock(), &request);
     }
 
-    let response = request.send().await.map_err(|e| {
+    let response = self.client.execute(request).await.map_err(|e| {
       if e.is_connect() {
         Error::ConnectionFailed
       } else {
@@ -394,6 +422,35 @@ impl Api {
       }),
     }
   }
+}
+
+/// Header carrying the SendWithUs API key.
+const API_KEY_HEADER: &str = "x-swu-api-key";
+
+/// Writes the method, URL, and headers of `request` for debug mode, with
+/// credential headers replaced by `[redacted]`.
+fn write_request_summary(out: &mut impl Write, request: &reqwest::Request) -> std::io::Result<()> {
+  writeln!(
+    out,
+    "SendWithUs Request: {} {}",
+    request.method(),
+    request.url()
+  )?;
+
+  for (name, value) in request.headers() {
+    let redact = value.is_sensitive()
+      || *name == API_KEY_HEADER
+      || *name == AUTHORIZATION
+      || *name == PROXY_AUTHORIZATION;
+
+    if redact {
+      writeln!(out, "  {name}: [redacted]")?;
+    } else {
+      writeln!(out, "  {name}: {value:?}")?;
+    }
+  }
+
+  Ok(())
 }
 
 #[async_trait]
@@ -728,6 +785,84 @@ pub mod helpers {
 mod tests {
   use super::*;
   use std::collections::HashMap;
+
+  const SECRET_KEY: &str = "swu_secret_key_123";
+
+  fn summary_of(request: &reqwest::Request) -> String {
+    let mut out = Vec::new();
+    write_request_summary(&mut out, request).expect("writing to a Vec cannot fail");
+    String::from_utf8(out).expect("summary is UTF-8")
+  }
+
+  #[test]
+  fn test_api_debug_redacts_api_key() {
+    let api = Api::new(Config::new(SECRET_KEY).with_debug(true));
+
+    for output in [format!("{api:?}"), format!("{api:#?}")] {
+      assert!(!output.contains(SECRET_KEY), "{output}");
+      assert!(output.contains("[redacted]"), "{output}");
+    }
+  }
+
+  #[test]
+  fn test_built_request_sends_key_but_debug_hides_it() {
+    let api = Api::with_api_key(SECRET_KEY);
+    let request = api
+      .build_request(
+        reqwest::Method::POST,
+        "send",
+        Some(&serde_json::json!({"a": 1})),
+      )
+      .expect("request builds");
+
+    assert_eq!(request.headers()[API_KEY_HEADER], SECRET_KEY);
+    assert!(request.headers()[API_KEY_HEADER].is_sensitive());
+    for output in [format!("{request:?}"), format!("{request:#?}")] {
+      assert!(!output.contains(SECRET_KEY), "{output}");
+    }
+  }
+
+  #[test]
+  fn test_request_summary_redacts_api_key() {
+    let api = Api::new(Config::new(SECRET_KEY).with_debug(true));
+    let request = api
+      .build_request(
+        reqwest::Method::POST,
+        "send",
+        Some(&serde_json::json!({"a": 1})),
+      )
+      .expect("request builds");
+
+    let summary = summary_of(&request);
+
+    assert!(!summary.contains(SECRET_KEY), "{summary}");
+    assert!(summary.contains("x-swu-api-key: [redacted]"), "{summary}");
+    assert!(
+      summary.contains("SendWithUs Request: POST https://api.sendwithus.com/api/v1/send"),
+      "{summary}"
+    );
+    assert!(summary.contains("x-swu-api-client:"), "{summary}");
+  }
+
+  #[test]
+  fn test_request_summary_redacts_authorization_headers() {
+    let request = Client::new()
+      .get("https://api.sendwithus.com/api/v1/templates")
+      .header(AUTHORIZATION, "Bearer auth-secret")
+      .header(PROXY_AUTHORIZATION, "Basic proxy-secret")
+      .build()
+      .expect("request builds");
+
+    let summary = summary_of(&request);
+
+    assert!(!summary.contains("auth-secret"), "{summary}");
+    assert!(!summary.contains("proxy-secret"), "{summary}");
+    assert!(summary.contains("authorization: [redacted]"), "{summary}");
+    assert!(
+      summary.contains("proxy-authorization: [redacted]"),
+      "{summary}"
+    );
+  }
 
   struct MockApiClient;
 

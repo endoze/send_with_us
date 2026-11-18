@@ -90,7 +90,7 @@ mod tests {
   use super::*;
   use std::fs::File;
   use std::io::Write;
-  use tempdir::TempDir;
+  use tempfile::TempDir;
 
   #[tokio::test]
   async fn test_attachment_from_bytes_with_explicit_filename() {
@@ -113,7 +113,7 @@ mod tests {
 
   #[tokio::test]
   async fn test_attachment_from_path_with_real_file() -> Result<()> {
-    let temp_dir = TempDir::new("attachment_test")?;
+    let temp_dir = TempDir::with_prefix("attachment_test")?;
     let file_path = temp_dir.path().join("test_file.txt");
     let content = b"hello world from file";
 
@@ -132,7 +132,7 @@ mod tests {
 
   #[tokio::test]
   async fn test_attachment_from_path_without_extension() -> Result<()> {
-    let temp_dir = TempDir::new("attachment_test")?;
+    let temp_dir = TempDir::with_prefix("attachment_test")?;
     let file_path = temp_dir.path().join("no_extension");
     let content = b"file without extension";
 
